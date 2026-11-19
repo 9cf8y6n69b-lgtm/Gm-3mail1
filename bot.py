@@ -1210,8 +1210,23 @@ SOLO_GAMES = ["زر", "اسرع", "فكك", "ادمج", "اعلام", "اعكس"
 
 
 # ================================================================ events & commands
+async def start_web():
+    """سيرفر ويب صغير عشان Render يلقى بورت مفتوح"""
+    from aiohttp import web
+
+    async def ok(_):
+        return web.Response(text="Bloomy bot is running ✅")
+
+    app = web.Application()
+    app.router.add_get("/", ok)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    await web.TCPSite(runner, "0.0.0.0", int(os.getenv("PORT", "10000"))).start()
+
+
 @bot.event
 async def setup_hook():
+    await start_web()
     await bot.tree.sync()
 
 
