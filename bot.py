@@ -8,7 +8,7 @@ from common import *
 import games_solo  # noqa: F401  (يسجّل الألعاب الفردية)
 import games_group  # noqa: F401  (يسجّل ألعاب السيرفر)
 from economy import (cmd_points, cmd_top, cmd_coins, cmd_daily, cmd_transfer, cmd_give, cmd_shop, cmd_bag, cmd_event)
-from dashboard import start_web
+from dashboard import start_web, password, base_url, invite_url
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 SOLO_ORDER = ["اسرع", "فكك", "شركة", "اشبك", "صحح", "اعكس", "عكس", "جمع", "مفرد", "حرف", "اعلام", "عواصم", "ضرب", "طرح", "ادمج"]
@@ -68,6 +68,27 @@ async def t_stop(ctx, msg, args):
     await ctx.send(content=await stop_game(msg.channel, msg.author))
 
 
+async def t_prefix(ctx, msg, args):
+    if not msg.author.guild_permissions.manage_guild:
+        return await ctx.send(content="تحتاج صلاحية Manage Server")
+    cfg = DB.guild(msg.guild.id)
+    if not args:
+        return await ctx.send(content=f"البيرفكس الحالي: `{cfg.get('prefix') or 'بدون'}`\nلتغييره: `بيرفكس !` — للحذف: `بيرفكس حذف`")
+    cfg["prefix"] = "" if norm(args[0]) in ("حذف", "بدون", "-", "لا") else args[0][:5]
+    DB.save()
+    await ctx.send(content=f"✅ البيرفكس الآن: `{cfg['prefix'] or 'بدون'}`")
+
+
+async def t_dash(ctx, msg, args):
+    if not msg.author.guild_permissions.manage_guild:
+        return await ctx.send(content="تحتاج صلاحية Manage Server")
+    try:
+        await msg.author.send(f"🔗 {base_url()}/login\n🔑 كلمة السر: `{password()}`")
+        await ctx.send(content="📩 أرسلت لك رابط اللوحة وكلمة السر خاص")
+    except discord.HTTPException:
+        await ctx.send(content="ما قدرت أرسل لك خاص، افتح الخاص أو استخدم `/dashboard`")
+
+
 async def t_games(ctx, msg, args):
     await ctx.send(content=games_text())
 
@@ -77,6 +98,7 @@ TEXT = {
     "يومي": lambda c, m, a: cmd_daily(c), "تحويل": t_transfer, "اعطاء": t_give,
     "متجر": lambda c, m, a: cmd_shop(c), "حقيبتي": lambda c, m, a: cmd_bag(c),
     "ايفنت": lambda c, m, a: cmd_event(c), "ايقاف": t_stop, "العاب": t_games,
+    "بيرفكس": t_prefix, "بادئة": t_prefix, "لوحة": t_dash,
 }
 RESERVED.update(norm(k) for k in TEXT)
 
@@ -86,8 +108,14 @@ async def on_message(msg: discord.Message):
     if msg.author.bot or not msg.guild:
         return
     txt = msg.content.strip()
+    mentioned = False  # منشن البوت يشتغل دائماً حتى لو نسيت البيرفكس
+    if bot.user:
+        for m in (f"<@{bot.user.id}>", f"<@!{bot.user.id}>"):
+            if txt.startswith(m):
+                txt, mentioned = txt[len(m):].strip(), True
+                break
     pre = DB.guild(msg.guild.id).get("prefix", "")
-    if pre:
+    if pre and not mentioned:
         if not txt.startswith(pre):
             return
         txt = txt[len(pre):].strip()
@@ -121,7 +149,9 @@ async def setup_hook():
 @bot.event
 async def on_ready():
     await apply_status()
-    print(f"Logged in as {bot.user}")
+    flags = len(os.listdir(os.path.join(IMG_DIR, "flags"))) if os.path.isdir(os.path.join(IMG_DIR, "flags")) else 0
+    print(f"Logged in as {bot.user} | flags on disk: {flags}")
+    print("INVITE:", invite_url())
 
 
 # ================================================================ slash: games
@@ -290,12 +320,11 @@ async def setstatus(inter: discord.Interaction, text: str, state: app_commands.C
     await inter.response.send_message("✅ تم تغيير حالة البوت", ephemeral=True)
 
 
-@bot.tree.command(name="dashboard", description="رابط لوحة التحكم")
+@bot.tree.command(name="dashboard", description="رابط لوحة التحكم وكلمة السر")
 async def dashboard_cmd(inter: discord.Interaction):
     if not is_admin(inter):
         return await need_admin(inter)
-    base = os.getenv("RENDER_EXTERNAL_URL") or f"http://localhost:{os.getenv('PORT', '10000')}"
-    await inter.response.send_message(f"🔗 {base}/dashboard\nاسم المستخدم: أي شي • كلمة المرور: متغير `DASH_PASSWORD`", ephemeral=True)
+    await inter.response.send_message(f"🔗 {base_url()}/login\n🔑 كلمة السر: `{password()}`", ephemeral=True)
 
 
 if __name__ == "__main__":

@@ -1,45 +1,37 @@
 from common import *
 
-WORDS = ("مدرسة سيارة طائرة حاسوب مكتبة شجرة نجمة صحراء كتاب طاولة نافذة حديقة مستشفى مطعم قهوة "
-         "عصير تفاحة برتقال فراولة هاتف ساعة مفتاح مظلة دراجة قطار سفينة جبل غابة شاطئ ملعب مدينة قلعة "
-         "ارنب حارس نمر فيل اسد غزال جمل حصان بطيخ موز عنب رمان ليمون خيمة سلم مطر قمر شمس سحابة").split()
+from data_ar import WORDS as _W, PLURALS as _P, OPPOSITES as _O, CAPITALS as _CA, COMPANIES as _CO, FLAGS
+import aiohttp
+
 SIM = {"س": "ص", "ص": "س", "د": "ض", "ض": "د", "ذ": "ظ", "ظ": "ذ", "ت": "ط", "ط": "ت",
        "ح": "خ", "خ": "ح", "ع": "غ", "غ": "ع", "ق": "ك", "ك": "ق"}
-PLURALS = [("كتاب", "كتب"), ("قلم", "اقلام"), ("بيت", "بيوت"), ("ولد", "اولاد"), ("رجل", "رجال"),
-           ("مدينة", "مدن"), ("شجرة", "اشجار"), ("نهر", "انهار"), ("جبل", "جبال"), ("طفل", "اطفال"),
-           ("باب", "ابواب"), ("نجم", "نجوم"), ("سيف", "سيوف"), ("بحر", "بحار"), ("كلب", "كلاب"),
-           ("قلب", "قلوب"), ("شارع", "شوارع"), ("مفتاح", "مفاتيح"), ("ورقة", "اوراق"), ("طالب", "طلاب"),
-           ("معلم", "معلمون", "معلمين"), ("مهندس", "مهندسون", "مهندسين"), ("مسلم", "مسلمون", "مسلمين"),
-           ("طائر", "طيور"), ("وردة", "ورود"), ("يوم", "ايام"), ("شهر", "شهور", "اشهر"), ("عين", "عيون")]
-OPPOSITES = [("كبير", "صغير"), ("طويل", "قصير"), ("حار", "بارد"), ("سريع", "بطيء", "بطي"), ("ليل", "نهار"),
-             ("قوي", "ضعيف"), ("جديد", "قديم"), ("سعيد", "حزين"), ("غني", "فقير"), ("نظيف", "قذر", "وسخ"),
-             ("سهل", "صعب"), ("بعيد", "قريب"), ("فوق", "تحت"), ("داخل", "خارج"), ("شمال", "جنوب"),
-             ("شرق", "غرب"), ("ممتلئ", "فارغ"), ("ثقيل", "خفيف"), ("ابيض", "اسود"), ("حلو", "مر"),
-             ("صباح", "مساء"), ("اول", "اخر"), ("حي", "ميت"), ("نعم", "لا")]
-CAPITALS = [("السعودية", "الرياض"), ("الامارات", "ابوظبي", "ابو ظبي"), ("الكويت", "الكويت", "مدينة الكويت"),
-            ("قطر", "الدوحة"), ("البحرين", "المنامة"), ("عمان", "مسقط"), ("مصر", "القاهرة"), ("الاردن", "عمان"),
-            ("العراق", "بغداد"), ("لبنان", "بيروت"), ("سوريا", "دمشق"), ("اليمن", "صنعاء"), ("المغرب", "الرباط"),
-            ("الجزائر", "الجزائر"), ("تونس", "تونس"), ("ليبيا", "طرابلس"), ("السودان", "الخرطوم"),
-            ("فلسطين", "القدس"), ("تركيا", "انقرة"), ("فرنسا", "باريس"), ("المانيا", "برلين"),
-            ("اليابان", "طوكيو"), ("بريطانيا", "لندن"), ("ايطاليا", "روما"), ("اسبانيا", "مدريد"),
-            ("روسيا", "موسكو"), ("الصين", "بكين"), ("امريكا", "واشنطن"), ("البرازيل", "برازيليا"),
-            ("كوريا الجنوبية", "سيول"), ("الهند", "نيودلهي", "دلهي")]
-COMPANIES = [("شركة صنعت الآيفون", "ابل", "apple"), ("شركة صنعت هواتف جالكسي", "سامسونج", "samsung"),
-             ("اكبر محرك بحث في العالم", "قوقل", "جوجل", "google"), ("شركة البلايستيشن", "سوني", "sony"),
-             ("شركة ويندوز والاكس بوكس", "مايكروسوفت", "microsoft"), ("شركة سيارات مؤسسها ايلون ماسك", "تيسلا", "tesla"),
-             ("اكبر متجر الكتروني مؤسسه جيف بيزوس", "امازون", "amazon"),
-             ("شركة فيسبوك وانستقرام الام", "ميتا", "فيسبوك", "meta", "facebook"),
-             ("مطاعم شعارها حرف M ذهبي", "ماكدونالدز", "ماكدونالد", "mcdonalds"),
-             ("شركة ملابس رياضية شعارها علامة صح", "نايكي", "nike"), ("مقاهي شعارها حورية خضراء", "ستاربكس", "starbucks"),
-             ("سيارات رياضية شعارها حصان اسود", "فيراري", "ferrari"), ("مشروب غازي احمر شهير", "كوكاكولا", "كوكا كولا"),
-             ("منصة افلام ومسلسلات شعارها N احمر", "نتفلكس", "netflix"),
-             ("شركة النفط السعودية العملاقة", "ارامكو", "aramco"), ("شركة طيران الامارات الشهيرة", "طيران الامارات", "emirates")]
-FLAGS = [("SA", "السعودية"), ("AE", "الامارات"), ("KW", "الكويت"), ("QA", "قطر"), ("BH", "البحرين"),
-         ("OM", "عمان"), ("EG", "مصر"), ("JO", "الاردن"), ("IQ", "العراق"), ("LB", "لبنان"), ("SY", "سوريا"),
-         ("YE", "اليمن"), ("MA", "المغرب"), ("DZ", "الجزائر"), ("TN", "تونس"), ("LY", "ليبيا"), ("SD", "السودان"),
-         ("PS", "فلسطين"), ("TR", "تركيا"), ("FR", "فرنسا"), ("DE", "المانيا"), ("JP", "اليابان"),
-         ("BR", "البرازيل"), ("US", "امريكا", "الولايات المتحدة"), ("GB", "بريطانيا", "انجلترا"), ("ES", "اسبانيا"),
-         ("IT", "ايطاليا"), ("RU", "روسيا"), ("CN", "الصين"), ("KR", "كوريا", "كوريا الجنوبية"), ("IN", "الهند")]
+
+
+def custom(key):
+    """أسئلة أضافها الأدمن من لوحة التحكم"""
+    return [tuple(x) for x in DB.d.get("custom", {}).get(key, []) if x]
+
+
+def words():
+    return _W + [x[0] for x in custom("words")]
+
+
+def plurals():
+    return _P + [x for x in custom("plurals") if len(x) >= 2]
+
+
+def opposites():
+    return _O + [x for x in custom("opposites") if len(x) >= 2]
+
+
+def capitals():
+    return _CA + [x for x in custom("capitals") if len(x) >= 2]
+
+
+def companies():
+    return _CO + [x for x in custom("companies") if len(x) >= 2]
+
+
 LETTERS = list("ابتجحدرسشعفقكلمنهوي")
 CATEGORIES = ["جماد", "اسم", "حيوان", "نبات", "بلاد"]
 
@@ -64,66 +56,97 @@ def corrupt(w):
 
 # ---------------------------------------------------------------- makers -> (prompt, check, reveal, file)
 async def mk_fast():
-    w = random.choice(WORDS)
+    w = random.choice(words())
     buf = await asyncio.to_thread(word_image, w)
     return "اكتب الكلمة اللي في الصورة بأسرع وقت!", *exact([w]), discord.File(buf, "word.png")
 
 
 async def mk_fakk():
-    w = random.choice(WORDS)
+    w = random.choice(words())
     return f"فكّك الكلمة (حرف حرف بمسافات)، مثال: ارنب ← ا ر ن ب\n# {w}", *exact([" ".join(w)]), None
 
 
 async def mk_asbk():
-    w = random.choice(WORDS)
+    w = random.choice(words())
     return f"اشبك الحروف واكتب الكلمة:\n# {' '.join(w)}", *exact([w]), None
 
 
 async def mk_dmj():
-    a, b = random.sample(WORDS, 2)
+    a, b = random.sample(words(), 2)
     return f"ادمج الكلمتين في كلمة وحدة بدون مسافة:\n# {a}  +  {b}", *exact([a + b]), None
 
 
 async def mk_reverse():
-    w = random.choice(WORDS)
+    w = random.choice(words())
     return f"الحروف مقلوبة! اكتب الكلمة الصحيحة:\n# {' '.join(w[::-1])}", *exact([w]), None
 
 
 async def mk_fix():
-    w = random.choice(WORDS)
+    w = random.choice(words())
     return f"صحّح الكلمة واكتبها صح:\n# {corrupt(w)}", *exact([w]), None
 
 
 async def mk_plural():
-    q = random.choice(PLURALS)
+    q = random.choice(plurals())
     return f"اكتب **جمع** الكلمة:\n# {q[0]}", *exact(list(q[1:])), None
 
 
 async def mk_singular():
-    q = random.choice(PLURALS)
+    q = random.choice(plurals())
     return f"اكتب **مفرد** الكلمة:\n# {q[1]}", *exact([q[0]]), None
 
 
 async def mk_opposite():
-    q = random.choice(OPPOSITES)
+    q = random.choice(opposites())
     return f"اكتب **عكس** الكلمة:\n# {q[0]}", *exact(list(q[1:])), None
 
 
 async def mk_capital():
-    q = random.choice(CAPITALS)
+    q = random.choice(capitals())
     return f"ما هي عاصمة:\n# {q[0]}", *exact(list(q[1:])), None
 
 
 async def mk_company():
-    q = random.choice(COMPANIES)
+    q = random.choice(companies())
     return f"ما اسم الشركة؟\n# {q[0]}", *exact(list(q[1:])), None
+
+
+FLAG_DIR = os.path.join(IMG_DIR, "flags")
+
+
+async def flag_bytes(code):
+    """صورة العلم: من الملف المحلي، وإذا ناقص تنزّل من الانترنت وتنحفظ"""
+    path = os.path.join(FLAG_DIR, code + ".png")
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            return f.read()
+    cps = "-".join(f"{0x1F1E6 + ord(c) - 65:x}" for c in code)
+    for url in (f"https://flagcdn.com/w320/{code.lower()}.png",
+                f"https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/{cps}.png"):
+        try:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=6)) as ses:
+                async with ses.get(url) as r:
+                    if r.status == 200:
+                        data = await r.read()
+                        try:
+                            os.makedirs(FLAG_DIR, exist_ok=True)
+                            with open(path, "wb") as f:
+                                f.write(data)
+                        except OSError:
+                            pass
+                        return data
+        except Exception:
+            continue
+    return None
 
 
 async def mk_flag():
     q = random.choice(FLAGS)
-    path = os.path.join(IMG_DIR, "flags", q[0] + ".png")
-    f = discord.File(path, "flag.png") if os.path.exists(path) else None
-    return "ما اسم هذه الدولة؟", *exact(list(q[1:])), f
+    data = await flag_bytes(q[0])
+    if data:
+        return "ما اسم هذه الدولة؟", *exact(list(q[1:])), discord.File(io.BytesIO(data), "flag.png")
+    emoji = "".join(chr(0x1F1E6 + ord(c) - 65) for c in q[0])
+    return f"ما اسم هذه الدولة؟\n# {emoji}", *exact(list(q[1:])), None
 
 
 async def mk_mul():

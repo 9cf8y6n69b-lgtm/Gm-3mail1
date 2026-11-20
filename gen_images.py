@@ -312,7 +312,7 @@ GAMES = [
 ]
 SHOP = [("boom", "الانفجار", boom), ("bomb", "القنبلة", mine), ("skull", "الجمجمة", skull), ("bolt", "الصاعقة", fast),
         ("sword", "السيف", sword), ("crown", "التاج", crown), ("fire", "النار", fire), ("star", "النجمة", star)]
-FLAG_CODES = ("SA AE KW QA BH OM EG JO IQ LB SY YE MA DZ TN LY SD PS TR FR DE JP BR US GB ES IT RU CN KR IN").split()
+from data_ar import FLAG_CODES
 
 
 def make(i, slug, title, accent, fn, w=W, h=H, folder=""):
